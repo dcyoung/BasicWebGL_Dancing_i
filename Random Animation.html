@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!-- saved from url=(0060)https://courses.engr.illinois.edu/cs418/RandomAnimation.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Random Animation</title>
+<meta charset="utf-8"> 
+<script id="shader-vs" type="x-shader/x-vertex">
+   attribute vec3 aVertexPosition;
+   attribute vec4 aVertexColor;
+
+    uniform mat4 uMVMatrix;
+    varying vec4 vColor;
+
+    void main(void) {
+        gl_Position = uMVMatrix*vec4(aVertexPosition, 1.0);
+        vColor = aVertexColor;
+    }
+</script><script id="shader-fs" type="x-shader/x-fragment">
+precision mediump float;
+varying vec4 vColor;
+void main(void) {
+        gl_FragColor = vColor;
+ }
+</script><script src="gl-matrix-min.js">
+</script><script type="text/javascript" src="./webgl-utils.js"></script>
+<script src="RandomAnimation.js"></script></head>
+
+    
+
+  
+
+
+ 
+
+   
+<body onload="startup();">
+  <canvas id="myGLCanvas" width="500" height="500"></canvas>
+
+
+
+<iframe frameborder="0" scrolling="no" style="border: 0px; display: none; background-color: transparent;"></iframe><div id="GOOGLE_INPUT_CHEXT_FLAG" input="null" input_stat="{&quot;tlang&quot;:true,&quot;tsbc&quot;:true,&quot;pun&quot;:true,&quot;mk&quot;:false,&quot;ss&quot;:true}" style="display: none;"></div></body></html>
