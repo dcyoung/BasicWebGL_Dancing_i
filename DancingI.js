@@ -11,7 +11,7 @@ var mvMatrix = mat4.create();
 var lastTime = 0;
 var framecount = 0;
 
-var triangleVertices_init= [
+var triangleVertices_initLeftSide= [
     -0.4,   -0.6,   0.0,
     -0.4,   -0.4,   0.0,
     0.0,   -0.6,    0.0,
@@ -22,7 +22,7 @@ var triangleVertices_init= [
     -0.4,   0.4,    0.0,
     -0.4,   0.6,    0.0
 ];
-var triangleVertices_init2= [
+var triangleVertices_initRightSide= [
     0.4,  -0.6,   0.0,
     0.4,  -0.4,   0.0,
     0.0,  -0.6,   0.0,
@@ -34,7 +34,7 @@ var triangleVertices_init2= [
     0.4,  0.6,    0.0
 ];
 
-var triangleVertices= [
+var triangleVerticesLeftSide= [
     -0.4,   -0.6,   0.0,
     -0.4,   -0.4,   0.0,
     0.0,   -0.6,    0.0,
@@ -46,7 +46,7 @@ var triangleVertices= [
     -0.4,   0.6,    0.0
 ];
 
-var triangleVertices2= [
+var triangleVerticesRightSide= [
     0.4,  -0.6,   0.0,
     0.4,  -0.4,   0.0,
     0.0,  -0.6,   0.0,
@@ -151,12 +151,12 @@ function setupShaders() {
 }
 
 function updateVerticesForBuffers() {
-    for(var i = 0; i < triangleVertices.length; i++) {
-        triangleVertices[i] = triangleVertices_init[i] + 0.1 * Math.sin(2*Math.PI* (framecount / 120.0) )
+    for(var i = 0; i < triangleVerticesLeftSide.length; i++) {
+        triangleVerticesLeftSide[i] = triangleVertices_initLeftSide[i] + 0.1 * Math.sin(2*Math.PI* (framecount / 120.0) )
     }
 
-    for(var i = 0; i < triangleVertices2.length; i++) {
-        triangleVertices2[i] = triangleVertices_init2[i] + 0.1 * Math.sin(2*Math.PI* (framecount / 120.0) )
+    for(var i = 0; i < triangleVerticesRightSide.length; i++) {
+        triangleVerticesRightSide[i] = triangleVertices_initRightSide[i] + 0.1 * Math.sin(2*Math.PI* (framecount / 120.0) )
     } 
 }
 
@@ -165,13 +165,13 @@ function setupBuffers() {
 	//var rotAngle = 0
   vertexPositionBufferLeftSide = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBufferLeftSide);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices_init), gl.DYNAMIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices_initLeftSide), gl.DYNAMIC_DRAW);
   vertexPositionBufferLeftSide.itemSize = 3;
   vertexPositionBufferLeftSide.numberOfItems = 9;
     
     vertexPositionBufferRightSide = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBufferRightSide);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices_init2), gl.DYNAMIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices_initRightSide), gl.DYNAMIC_DRAW);
     vertexPositionBufferRightSide.itemSize = 3;
     vertexPositionBufferRightSide.numberOfItems = 9;    
     
@@ -208,12 +208,12 @@ function drawHelper(buff){
      gl.bindBuffer(gl.ARRAY_BUFFER, buff);
     
     if(buff == vertexPositionBufferLeftSide){
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.DYNAMIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVerticesLeftSide), gl.DYNAMIC_DRAW);
         vertexPositionBufferLeftSide.itemSize = 3;
         vertexPositionBufferLeftSide.numberOfItems = 9;
     }
     else if(buff == vertexPositionBufferRightSide){
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices2), gl.DYNAMIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVerticesRightSide), gl.DYNAMIC_DRAW);
         vertexPositionBufferRightSide.itemSize = 3;
         vertexPositionBufferRightSide.numberOfItems = 9;
     }
