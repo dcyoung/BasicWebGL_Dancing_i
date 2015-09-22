@@ -3,6 +3,7 @@ var gl;
 var canvas;
 var shaderProgram;
 var vertexPositionBufferLeftSide;
+var vertexPositionBufferLeftSideLines
 var vertexPositionBufferRightSide
 
 // Create a place to store vertex colors
@@ -22,6 +23,7 @@ var triangleVertices_initLeftSide= [
     -0.4,   0.4,    0.0,
     -0.4,   0.6,    0.0
 ];
+
 var triangleVertices_initRightSide= [
     0.4,  -0.6,   0.0,
     0.4,  -0.4,   0.0,
@@ -158,6 +160,7 @@ function updateVerticesForBuffers() {
     for(var i = 0; i < triangleVerticesRightSide.length; i++) {
         triangleVerticesRightSide[i] = triangleVertices_initRightSide[i] + 0.1 * Math.sin(2*Math.PI* (framecount / 120.0) )
     } 
+    
 }
 
 
@@ -175,6 +178,7 @@ function setupBuffers() {
     vertexPositionBufferRightSide.itemSize = 3;
     vertexPositionBufferRightSide.numberOfItems = 9;    
     
+
   vertexColorBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
   var colors = [
@@ -186,7 +190,7 @@ function setupBuffers() {
         1.0, 0.40, 0.0, 1.0,
         1.0, 0.30, 0.0, 1.0,
         1.0, 0.20, 0.0, 1.0,
-        1.0, 0.10, 0.0, 1.0
+        1.0, 0.10, 0.0, 1.0,
     ];
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
   vertexColorBuffer.itemSize = 4;
@@ -194,17 +198,15 @@ function setupBuffers() {
 }
 
 function draw() { 
+    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);  
+    mat4.identity(mvMatrix);
     
-    
-  gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);  
-  mat4.identity(mvMatrix);
-  //mat4.rotateX(mvMatrix, mvMatrix, degToRad(rotAngle));  
-    drawHelper(vertexPositionBufferLeftSide);
-    drawHelper(vertexPositionBufferRightSide);
-
+    //mat4.rotateX(mvMatrix, mvMatrix, degToRad(rotAngle));  
+    drawHelper(vertexPositionBufferLeftSide, document.getElementById("doUseWireframe").checked);
+    drawHelper(vertexPositionBufferRightSide, document.getElementById("doUseWireframe").checked);
 }
-function drawHelper(buff){
+function drawHelper(buff, bDrawLines){
      gl.bindBuffer(gl.ARRAY_BUFFER, buff);
     
     if(buff == vertexPositionBufferLeftSide){
@@ -217,14 +219,30 @@ function drawHelper(buff){
         vertexPositionBufferRightSide.itemSize = 3;
         vertexPositionBufferRightSide.numberOfItems = 9;
     }
-  gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, 
+    
+    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, 
                          buff.itemSize, gl.FLOAT, false, 0, 0);
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
-  gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, 
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
+    gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, 
                             vertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
   
-  setMatrixUniforms();
-  gl.drawArrays(gl. TRIANGLE_STRIP, 0, buff.numberOfItems);
+    setMatrixUniforms();
+    
+    if(bDrawLines == true){
+        if(buff == vertexPositionBufferLeftSide){
+            for(var i = 0; i < triangleVerticesLeftSide.length-2; i++) {
+                gl.drawArrays(gl.LINE_LOOP, i, 3);
+            }
+        }
+        else if(buff == vertexPositionBufferRightSide){
+            for(var i = 0; i < triangleVerticesRightSide.length-2; i++) {
+                gl.drawArrays(gl.LINE_LOOP, i, 3);
+            }
+        }
+    }
+    else{
+        gl.drawArrays(gl. TRIANGLE_STRIP, 0, buff.numberOfItems);
+    }
 }
 
 function animate() {
