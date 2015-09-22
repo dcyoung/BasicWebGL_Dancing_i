@@ -1,11 +1,3 @@
-
-//next step: get rid of updateVertices method to be replaced functionally by the tween... 
-//create different arrays of vertices of the whole I for each keyframe 
-//use the tween onUpdate function to change the value stored in triangleVerticesLeftSide or RightSide to an interpolated value between different keyframes
-//
-
-
-
 var gl;
 var canvas;
 var shaderProgram;
@@ -20,7 +12,7 @@ var lastTime = 0;
 var framecount = 0;
 
 
-var keyLeft_0 = [
+var keyLeft_PostSquash = [
     -0.4,   -1.0,   0.0,
     -0.4,   -0.8,   0.0,
     0.0,   -1.0,    0.0,
@@ -28,12 +20,23 @@ var keyLeft_0 = [
     0.0,    -0.4,    0.0,
     -0.1,   0.0,    0.0,
     0.0,    0.2,    0.0,
-    -0.4,   0.0,    0.0,
-    -0.42,   0.2,    0.0
+    -0.4,   -0.02,    0.0,
+    -0.42,   0.18,    0.0
+];
+var keyLeft_PreSquash = [
+    -0.4,   -1.0,   0.0,
+    -0.4,   -0.8,   0.0,
+    0.0,   -1.0,    0.0,
+    -0.1,  -0.8,    0.0,
+    0.0,    -0.4,    0.0,
+    -0.1,   0.0,    0.0,
+    0.0,    0.2,    0.0,
+    -0.43,   0.02,    0.0,
+    -0.4,   0.22,    0.0
 ];
 
 
-var keyLeft_1 = [
+var keyLeft_Squash = [
     -0.6,	-1.0,	0,
     -0.6,	-0.7,	0,
     0.0,	-1.0,	0,
@@ -42,11 +45,10 @@ var keyLeft_1 = [
     -0.1,	-0.5,	0,
     0.0,	-0.4,	0,
     -0.4,	-0.6,	0,
-    -0.4,	-0.5,	0
+    -0.42,	-0.5,	0
 ];
 
-
-var triangleVertices_initLeftSide= [
+var triangleVertices_Hover= [
     -0.4,   -0.6,   0.0,
     -0.4,   -0.4,   0.0,
     0.0,   -0.6,    0.0,
@@ -55,19 +57,7 @@ var triangleVertices_initLeftSide= [
     -0.1,   0.4,    0.0,
     0.0,    0.6,    0.0,
     -0.4,   0.4,    0.0,
-    -0.42,   0.6,    0.0
-];
-
-var triangleVertices_initRightSide= [
-    0.4,  -0.6,   0.0,
-    0.4,  -0.4,   0.0,
-    0.0,  -0.6,   0.0,
-    0.1,  -0.4,   0.0,
-    0.0,  0.0,    0.0,
-    0.1,  0.4,    0.0,
-    0.0,  0.6,    0.0,
-    0.4,  0.4,    0.0,
-    0.4,  0.6,    0.0
+    -0.4,   0.6,    0.0
 ];
 
 var triangleVerticesLeftSide= [
@@ -94,12 +84,12 @@ var triangleVerticesRightSide= [
     0.4,  0.6,    0.0
 ];
 
-//Tween Stuff for keyframe animation
-var tweenKey_Left_0_down = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_0,700).easing(TWEEN.Easing.Quadratic.In);
-var tweenKey_Left_0_up = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_0,500).easing(TWEEN.Easing.Quadratic.In);
+//Initialize the Tweens that will be used to interpolate to each keyframe
+var tweenKey_Left_PreSquash = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_PreSquash,700).easing(TWEEN.Easing.Quadratic.In);
+var tweenKey_Left_PostSquash = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_PostSquash,500).easing(TWEEN.Easing.Quadratic.In);
 
-var tweenKey_Left_1 = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_1,500).easing(TWEEN.Easing.Quadratic.Out);
-var tweenKey_Left_init = new TWEEN.Tween(triangleVerticesLeftSide).to(triangleVertices_initLeftSide,1000).easing(TWEEN.Easing.Quadratic.Out);
+var tweenKey_Left_Squash = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_Squash,500).easing(TWEEN.Easing.Quadratic.Out);
+var tweenKey_Left_Hover = new TWEEN.Tween(triangleVerticesLeftSide).to(triangleVertices_Hover,1000).easing(TWEEN.Easing.Quadratic.Out);
 
 
 
@@ -195,36 +185,42 @@ function setupShaders() {
   
 }
 
-function updateVerticesForBuffers() {
-    for(var i = 0; i < triangleVerticesLeftSide.length; i++) {
-        triangleVerticesLeftSide[i] = triangleVertices_initLeftSide[i] + 0.1 * Math.sin(2*Math.PI* (framecount / 120.0) )
-    }
 
-    for(var i = 0; i < triangleVerticesRightSide.length; i++) {
-        triangleVerticesRightSide[i] = triangleVertices_initRightSide[i] + 0.1 * Math.sin(2*Math.PI* (framecount / 120.0) )
-    } 
-    
-}
+//old method, no longer uised
+//function updateVerticesForBuffers() {
+//    for(var i = 0; i < triangleVerticesLeftSide.length; i++) {
+//        triangleVerticesLeftSide[i] = triangleVertices_initLeftSide[i] + 0.1 * Math.sin(2*Math.PI* (framecount / 120.0) )
+//    }
+//
+//    for(var i = 0; i < triangleVerticesRightSide.length; i++) {
+//        triangleVerticesRightSide[i] = triangleVertices_initRightSide[i] + 0.1 * Math.sin(2*Math.PI* (framecount / 120.0) )
+//    } 
+//    
+//}
 
 
+//setup the buffers
 function setupBuffers() {
 	//var rotAngle = 0
-  vertexPositionBufferLeftSide = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBufferLeftSide);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices_initLeftSide), gl.DYNAMIC_DRAW);
-  vertexPositionBufferLeftSide.itemSize = 3;
-  vertexPositionBufferLeftSide.numberOfItems = 9;
     
+    //vertex position buffer for the left side of the capital letter I
+    vertexPositionBufferLeftSide = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBufferLeftSide);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVerticesLeftSide), gl.DYNAMIC_DRAW);
+    vertexPositionBufferLeftSide.itemSize = 3;
+    vertexPositionBufferLeftSide.numberOfItems = 9;
+    
+    //vertex position buffer for the right side of the capital letter I
     vertexPositionBufferRightSide = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBufferRightSide);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices_initRightSide), gl.DYNAMIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVerticesRightSide), gl.DYNAMIC_DRAW);
     vertexPositionBufferRightSide.itemSize = 3;
     vertexPositionBufferRightSide.numberOfItems = 9;    
     
-
-  vertexColorBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
-  var colors = [
+    //vertex color buffer, will work for both sides
+    vertexColorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
+    var colors = [
         1.0, 0.90, 0.0, 1.0,
         1.0, 0.80, 0.0, 1.0,
         1.0, 0.70, 0.0, 1.0,
@@ -235,11 +231,12 @@ function setupBuffers() {
         1.0, 0.20, 0.0, 1.0,
         1.0, 0.10, 0.0, 1.0,
     ];
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-  vertexColorBuffer.itemSize = 4;
-  vertexColorBuffer.numItems = 9;  
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+    vertexColorBuffer.itemSize = 4;
+    vertexColorBuffer.numItems = 9;  
 }
 
+//draw the capital letter "I" by first clearing the viewport and then drawing each array carrying a side of the "I" 
 function draw() { 
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);  
@@ -249,9 +246,14 @@ function draw() {
     drawHelper(vertexPositionBufferLeftSide, document.getElementById("doUseWireframe").checked);
     drawHelper(vertexPositionBufferRightSide, document.getElementById("doUseWireframe").checked);
 }
+
+
+//helper function to draw a buffer with conditionals on what type of buffer is being drawn
+//permits calling a single function even if the left or right side of the letter is being drawn
 function drawHelper(buff, bDrawLines){
      gl.bindBuffer(gl.ARRAY_BUFFER, buff);
     
+    //make sure the buffer data is set using the proper array (left or right side)
     if(buff == vertexPositionBufferLeftSide){
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVerticesLeftSide), gl.DYNAMIC_DRAW);
         vertexPositionBufferLeftSide.itemSize = 3;
@@ -271,6 +273,7 @@ function drawHelper(buff, bDrawLines){
   
     setMatrixUniforms();
     
+    //draw the buffer as lines if the function was asked to do so, and triangles if not
     if(bDrawLines == true){
         if(buff == vertexPositionBufferLeftSide){
             for(var i = 0; i < triangleVerticesLeftSide.length-2; i++) {
@@ -288,6 +291,7 @@ function drawHelper(buff, bDrawLines){
     }
 }
 
+//update the last time 
 function animate() {
     var timeNow = new Date().getTime();
     var elapsed = timeNow - lastTime;
@@ -297,34 +301,44 @@ function animate() {
 
 
 function startup() {
-  canvas = document.getElementById("myGLCanvas");
-  gl = createGLContext(canvas);
-  setupShaders(); 
-  setupBuffers();
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.enable(gl.DEPTH_TEST);
+    //get the canvas by the DOM element id and create a GL context
+    canvas = document.getElementById("myGLCanvas");
+    gl = createGLContext(canvas);
+    //setup the shaders and buffers
+    setupShaders(); 
+    setupBuffers();
+    //clear the background to be just black
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.DEPTH_TEST);
     
+    //setup the tweens which will handle interpolating values between keyframes
     setupTweens();
-
+    
+    //kickoff the tick function which will keep the program going from here
     tick();
 }
 
 function setupTweens(){
-    tweenKey_Left_init.onUpdate(updateOtherSideVertices);
-    tweenKey_Left_0_up.onUpdate(updateOtherSideVertices);
-    tweenKey_Left_0_down.onUpdate(updateOtherSideVertices);
-    tweenKey_Left_1.onUpdate(updateOtherSideVertices);
+    //make sure that every time the tween interpolates values for the left side, 
+    //it also copies those values (making note of x-flip) to the right vertices as well
+    tweenKey_Left_Hover.onUpdate(updateOtherSideVertices);
+    tweenKey_Left_PostSquash.onUpdate(updateOtherSideVertices);
+    tweenKey_Left_PreSquash.onUpdate(updateOtherSideVertices);
+    tweenKey_Left_Squash.onUpdate(updateOtherSideVertices);
     
-    tweenKey_Left_0_up.chain(tweenKey_Left_init);
-    tweenKey_Left_init.chain(tweenKey_Left_0_down);
-    tweenKey_Left_0_down.chain(tweenKey_Left_1);
-    tweenKey_Left_1.chain(tweenKey_Left_0_up);
+    //setup the order of the keyframes by chaining the tweens in the following order:
+    //hover->fall->squash->jump->hover->repeat
+    tweenKey_Left_PostSquash.chain(tweenKey_Left_Hover);
+    tweenKey_Left_Hover.chain(tweenKey_Left_PreSquash);
+    tweenKey_Left_PreSquash.chain(tweenKey_Left_Squash);
+    tweenKey_Left_Squash.chain(tweenKey_Left_PostSquash);
 
-
-    tweenKey_Left_init.start();
+    //choose the hover to start with
+    tweenKey_Left_Hover.start();
 
 }
 
+//update the vertices for the right half of the letter "I" to match whats been changed/interpolated for the left side
 function updateOtherSideVertices(){
     for(var i = 0; i < triangleVerticesLeftSide.length; i+=3) {
         triangleVerticesRightSide[i] = -triangleVerticesLeftSide[i];
@@ -332,11 +346,12 @@ function updateOtherSideVertices(){
     }   
 }
 
+//every tick update the tweens and draw things
 function tick() {
     framecount++
     requestAnimFrame(tick);
     draw();
-    animate(); 
+    //animate(); 
     TWEEN.update();
 }
 
