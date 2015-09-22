@@ -19,25 +19,30 @@ var mvMatrix = mat4.create();
 var lastTime = 0;
 var framecount = 0;
 
-//tween stuff
-var position = [1, 1, 1];
-var targetA = [2, 2, 2];
-var targetB = [1, 1, 1];
-var tweenA = new TWEEN.Tween(position).to(targetA, 2000);
-var tweenB = new TWEEN.Tween(position).to(targetB, 2000);
 
+var keyLeft_0 = [
+    -0.4,   -1.0,   0.0,
+    -0.4,   -0.8,   0.0,
+    0.0,   -1.0,    0.0,
+    -0.1,  -0.8,    0.0,
+    0.0,    -0.4,    0.0,
+    -0.1,   0.0,    0.0,
+    0.0,    0.2,    0.0,
+    -0.4,   0.0,    0.0,
+    -0.42,   0.2,    0.0
+];
 
 
 var keyLeft_1 = [
-    -0.6,	-0.6,	0,
-    -0.6,	-0.3,	0,
-    0.0,	-0.6,	0,
-    -0.2,	-0.5,	0,
-    0.0,	-0.2,	0,
-    -0.1,	-0.2,	0,
-    0.0,	-0.2,	0,
-    -0.35,	-0.3,	0,
-    -0.4,	-0.35,	0
+    -0.6,	-1.0,	0,
+    -0.6,	-0.7,	0,
+    0.0,	-1.0,	0,
+    -0.2,	-0.9,	0,
+    0.0,	-0.5,	0,
+    -0.1,	-0.5,	0,
+    0.0,	-0.4,	0,
+    -0.4,	-0.6,	0,
+    -0.4,	-0.5,	0
 ];
 
 
@@ -50,7 +55,7 @@ var triangleVertices_initLeftSide= [
     -0.1,   0.4,    0.0,
     0.0,    0.6,    0.0,
     -0.4,   0.4,    0.0,
-    -0.4,   0.6,    0.0
+    -0.42,   0.6,    0.0
 ];
 
 var triangleVertices_initRightSide= [
@@ -90,8 +95,12 @@ var triangleVerticesRightSide= [
 ];
 
 //Tween Stuff for keyframe animation
-var tweenKey_0_1 = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_1,2000);
-var tweenKey_1_0 = new TWEEN.Tween(triangleVerticesLeftSide).to(triangleVertices_initLeftSide,2000);
+var tweenKey_Left_0_down = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_0,700).easing(TWEEN.Easing.Quadratic.In);
+var tweenKey_Left_0_up = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_0,500).easing(TWEEN.Easing.Quadratic.In);
+
+var tweenKey_Left_1 = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_1,500).easing(TWEEN.Easing.Quadratic.Out);
+var tweenKey_Left_init = new TWEEN.Tween(triangleVerticesLeftSide).to(triangleVertices_initLeftSide,1000).easing(TWEEN.Easing.Quadratic.Out);
+
 
 
 function setMatrixUniforms() {
@@ -238,7 +247,7 @@ function draw() {
     
     //mat4.rotateX(mvMatrix, mvMatrix, degToRad(rotAngle));  
     drawHelper(vertexPositionBufferLeftSide, document.getElementById("doUseWireframe").checked);
-    //drawHelper(vertexPositionBufferRightSide, document.getElementById("doUseWireframe").checked);
+    drawHelper(vertexPositionBufferRightSide, document.getElementById("doUseWireframe").checked);
 }
 function drawHelper(buff, bDrawLines){
      gl.bindBuffer(gl.ARRAY_BUFFER, buff);
@@ -295,28 +304,33 @@ function startup() {
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.enable(gl.DEPTH_TEST);
     
-    tweenKey_0_1.onUpdate();
-    tweenKey_0_1.chain(tweenKey_1_0);
-    tweenKey_1_0.chain(tweenKey_0_1);
-    tweenKey_0_1.start();
-    
-//    tweenA.onUpdate(function(){
-//        //alert(position.toString());
-//    });
-//    tweenB.onUpdate(function(){
-//        //alert(position.toString());
-//    });
-//    tweenA.chain(tweenB);
-//    tweenB.chain(tweenA);
-//    tweenA.start();
-    
-    
-    
-    
+    setupTweens();
+
     tick();
 }
 
+function setupTweens(){
+    tweenKey_Left_init.onUpdate(updateOtherSideVertices);
+    tweenKey_Left_0_up.onUpdate(updateOtherSideVertices);
+    tweenKey_Left_0_down.onUpdate(updateOtherSideVertices);
+    tweenKey_Left_1.onUpdate(updateOtherSideVertices);
+    
+    tweenKey_Left_0_up.chain(tweenKey_Left_init);
+    tweenKey_Left_init.chain(tweenKey_Left_0_down);
+    tweenKey_Left_0_down.chain(tweenKey_Left_1);
+    tweenKey_Left_1.chain(tweenKey_Left_0_up);
 
+
+    tweenKey_Left_init.start();
+
+}
+
+function updateOtherSideVertices(){
+    for(var i = 0; i < triangleVerticesLeftSide.length; i+=3) {
+        triangleVerticesRightSide[i] = -triangleVerticesLeftSide[i];
+        triangleVerticesRightSide[i+1] = triangleVerticesLeftSide[i+1];  
+    }   
+}
 
 function tick() {
     framecount++
