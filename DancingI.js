@@ -1,4 +1,11 @@
 
+//next step: get rid of updateVertices method to be replaced functionally by the tween... 
+//create different arrays of vertices of the whole I for each keyframe 
+//use the tween onUpdate function to change the value stored in triangleVerticesLeftSide or RightSide to an interpolated value between different keyframes
+//
+
+
+
 var gl;
 var canvas;
 var shaderProgram;
@@ -11,6 +18,28 @@ var vertexColorBuffer;
 var mvMatrix = mat4.create();
 var lastTime = 0;
 var framecount = 0;
+
+//tween stuff
+var position = [1, 1, 1];
+var targetA = [2, 2, 2];
+var targetB = [1, 1, 1];
+var tweenA = new TWEEN.Tween(position).to(targetA, 2000);
+var tweenB = new TWEEN.Tween(position).to(targetB, 2000);
+
+
+
+var keyLeft_1 = [
+    -0.6,	-0.6,	0,
+    -0.6,	-0.3,	0,
+    0.0,	-0.6,	0,
+    -0.2,	-0.5,	0,
+    0.0,	-0.2,	0,
+    -0.1,	-0.2,	0,
+    0.0,	-0.2,	0,
+    -0.35,	-0.3,	0,
+    -0.4,	-0.35,	0
+];
+
 
 var triangleVertices_initLeftSide= [
     -0.4,   -0.6,   0.0,
@@ -59,6 +88,11 @@ var triangleVerticesRightSide= [
     0.4,  0.4,    0.0,
     0.4,  0.6,    0.0
 ];
+
+//Tween Stuff for keyframe animation
+var tweenKey_0_1 = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_1,2000);
+var tweenKey_1_0 = new TWEEN.Tween(triangleVerticesLeftSide).to(triangleVertices_initLeftSide,2000);
+
 
 function setMatrixUniforms() {
     gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
@@ -204,7 +238,7 @@ function draw() {
     
     //mat4.rotateX(mvMatrix, mvMatrix, degToRad(rotAngle));  
     drawHelper(vertexPositionBufferLeftSide, document.getElementById("doUseWireframe").checked);
-    drawHelper(vertexPositionBufferRightSide, document.getElementById("doUseWireframe").checked);
+    //drawHelper(vertexPositionBufferRightSide, document.getElementById("doUseWireframe").checked);
 }
 function drawHelper(buff, bDrawLines){
      gl.bindBuffer(gl.ARRAY_BUFFER, buff);
@@ -249,7 +283,7 @@ function animate() {
     var timeNow = new Date().getTime();
     var elapsed = timeNow - lastTime;
     lastTime = timeNow;    
-    updateVerticesForBuffers();  
+    //updateVerticesForBuffers();  
 }
 
 
@@ -260,13 +294,35 @@ function startup() {
   setupBuffers();
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.enable(gl.DEPTH_TEST);
-  tick();
+    
+    tweenKey_0_1.onUpdate();
+    tweenKey_0_1.chain(tweenKey_1_0);
+    tweenKey_1_0.chain(tweenKey_0_1);
+    tweenKey_0_1.start();
+    
+//    tweenA.onUpdate(function(){
+//        //alert(position.toString());
+//    });
+//    tweenB.onUpdate(function(){
+//        //alert(position.toString());
+//    });
+//    tweenA.chain(tweenB);
+//    tweenB.chain(tweenA);
+//    tweenA.start();
+    
+    
+    
+    
+    tick();
 }
+
+
 
 function tick() {
     framecount++
     requestAnimFrame(tick);
     draw();
-    animate();    
+    animate(); 
+    TWEEN.update();
 }
 
