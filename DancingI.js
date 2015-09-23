@@ -1,3 +1,32 @@
+/* Summary: 
+    This script animates a capital letter "I" to look like it is bouncing 
+    similar to the old pixar lamp. It draws the letter using 2 triangle strips with 
+    no degenerate triangles, and then animates the movements using keyframes. 
+    
+    The animation was broken into 4 basic positions and each was assigned a keyframe:
+        -pre squash
+        -squash
+        -post squash
+        -hover
+    Each keyframe is a matrix of vertex positions defining the form of the left half 
+    only for that keyframe's specific pose. Because the letter "I" is symmetrical, 
+    it was possible to use only the left half and calculate the vertex positions of 
+    the right half based off the left. A set of matrices (triangleVerticesLeftSide,
+    and triangleVerticesRightSide) hold the current vertex position for the left
+    and right sides of the animated letter at all times. The matrices for the keyframes
+    simply define target positions and do not change over time. 
+    
+    To aniamte the bouncing letter, the actual vertices for the current position are 
+    updated to interpolate between different keyframe targets in the proper sequence. 
+    A library called TWEEN (short for in-between), was used to interpolate the vertex 
+    positions between different keyframes and then those tweens were chained together 
+    in the correct order to create a looping animation. Again, because the letter is 
+    symetric, the tweens only interpolate values for the left half of the letter and
+    then everytime they update, a function is called to also update the right half of
+    the letter by simply looking at the newly updated left half.    
+    
+*/
+
 var gl;
 var canvas;
 var shaderProgram;
@@ -12,54 +41,8 @@ var lastTime = 0;
 var framecount = 0;
 
 
-var keyLeft_PostSquash = [
-    -0.4,   -1.0,   0.0,
-    -0.4,   -0.8,   0.0,
-    0.0,   -1.0,    0.0,
-    -0.1,  -0.8,    0.0,
-    0.0,    -0.4,    0.0,
-    -0.1,   0.0,    0.0,
-    0.0,    0.2,    0.0,
-    -0.4,   -0.02,    0.0,
-    -0.42,   0.18,    0.0
-];
-var keyLeft_PreSquash = [
-    -0.4,   -1.0,   0.0,
-    -0.4,   -0.8,   0.0,
-    0.0,   -1.0,    0.0,
-    -0.1,  -0.8,    0.0,
-    0.0,    -0.4,    0.0,
-    -0.1,   0.0,    0.0,
-    0.0,    0.2,    0.0,
-    -0.43,   0.02,    0.0,
-    -0.4,   0.22,    0.0
-];
 
-
-var keyLeft_Squash = [
-    -0.6,	-1.0,	0,
-    -0.6,	-0.7,	0,
-    0.0,	-1.0,	0,
-    -0.2,	-0.9,	0,
-    0.0,	-0.5,	0,
-    -0.1,	-0.5,	0,
-    0.0,	-0.4,	0,
-    -0.4,	-0.6,	0,
-    -0.42,	-0.5,	0
-];
-
-var triangleVertices_Hover= [
-    -0.4,   -0.6,   0.0,
-    -0.4,   -0.4,   0.0,
-    0.0,   -0.6,    0.0,
-    -0.1,  -0.4,    0.0,
-    0.0,    0.0,    0.0,
-    -0.1,   0.4,    0.0,
-    0.0,    0.6,    0.0,
-    -0.4,   0.4,    0.0,
-    -0.4,   0.6,    0.0
-];
-
+//create two matrices to hold the current vertex positions for each half of the letter
 var triangleVerticesLeftSide= [
     -0.4,   -0.6,   0.0,
     -0.4,   -0.4,   0.0,
@@ -84,10 +67,58 @@ var triangleVerticesRightSide= [
     0.4,  0.6,    0.0
 ];
 
+
+//Define the keyframe... each is simply a matrix of vertex positions
+//for the left half of the letter "I" for specific pose.
+var keyLeft_PostSquash = [
+    -0.4,   -1.0,   0.0,
+    -0.4,   -0.8,   0.0,
+    0.0,   -1.0,    0.0,
+    -0.1,  -0.8,    0.0,
+    0.0,    -0.4,    0.0,
+    -0.1,   0.0,    0.0,
+    0.0,    0.2,    0.0,
+    -0.4,   -0.02,    0.0,
+    -0.42,   0.18,    0.0
+];
+var keyLeft_PreSquash = [
+    -0.4,   -1.0,   0.0,
+    -0.4,   -0.8,   0.0,
+    0.0,   -1.0,    0.0,
+    -0.1,  -0.8,    0.0,
+    0.0,    -0.4,    0.0,
+    -0.1,   0.0,    0.0,
+    0.0,    0.2,    0.0,
+    -0.43,   0.02,    0.0,
+    -0.4,   0.22,    0.0
+];
+var keyLeft_Squash = [
+    -0.6,	-1.0,	0,
+    -0.6,	-0.7,	0,
+    0.0,	-1.0,	0,
+    -0.2,	-0.9,	0,
+    0.0,	-0.5,	0,
+    -0.1,	-0.5,	0,
+    0.0,	-0.4,	0,
+    -0.4,	-0.6,	0,
+    -0.42,	-0.5,	0
+];
+var triangleVertices_Hover= [
+    -0.4,   -0.6,   0.0,
+    -0.4,   -0.4,   0.0,
+    0.0,   -0.6,    0.0,
+    -0.1,  -0.4,    0.0,
+    0.0,    0.0,    0.0,
+    -0.1,   0.4,    0.0,
+    0.0,    0.6,    0.0,
+    -0.4,   0.4,    0.0,
+    -0.4,   0.6,    0.0
+];
+
+
 //Initialize the Tweens that will be used to interpolate to each keyframe
 var tweenKey_Left_PreSquash = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_PreSquash,700).easing(TWEEN.Easing.Quadratic.In);
 var tweenKey_Left_PostSquash = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_PostSquash,500).easing(TWEEN.Easing.Quadratic.In);
-
 var tweenKey_Left_Squash = new TWEEN.Tween(triangleVerticesLeftSide).to(keyLeft_Squash,500).easing(TWEEN.Easing.Quadratic.Out);
 var tweenKey_Left_Hover = new TWEEN.Tween(triangleVerticesLeftSide).to(triangleVertices_Hover,1000).easing(TWEEN.Easing.Quadratic.Out);
 
@@ -95,11 +126,6 @@ var tweenKey_Left_Hover = new TWEEN.Tween(triangleVerticesLeftSide).to(triangleV
 
 function setMatrixUniforms() {
     gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
-}
-
-
-function degToRad(degrees) {
-        return degrees * Math.PI / 180;
 }
 
 
@@ -186,7 +212,7 @@ function setupShaders() {
 }
 
 
-//old method, no longer uised
+//old method, no longer used
 //function updateVerticesForBuffers() {
 //    for(var i = 0; i < triangleVerticesLeftSide.length; i++) {
 //        triangleVerticesLeftSide[i] = triangleVertices_initLeftSide[i] + 0.1 * Math.sin(2*Math.PI* (framecount / 120.0) )
@@ -199,10 +225,16 @@ function setupShaders() {
 //}
 
 
+//update the vertices for the right half of the letter "I" to match whats been changed/interpolated for the left side
+function updateOtherSideVertices(){
+    for(var i = 0; i < triangleVerticesLeftSide.length; i+=3) {
+        triangleVerticesRightSide[i] = -triangleVerticesLeftSide[i];
+        triangleVerticesRightSide[i+1] = triangleVerticesLeftSide[i+1];  
+    }   
+}
+
 //setup the buffers
 function setupBuffers() {
-	//var rotAngle = 0
-    
     //vertex position buffer for the left side of the capital letter I
     vertexPositionBufferLeftSide = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBufferLeftSide);
@@ -236,13 +268,36 @@ function setupBuffers() {
     vertexColorBuffer.numItems = 9;  
 }
 
+
+//setup the tweens including chaining order and on update
+function setupTweens(){
+    //make sure that every time the tween interpolates values for the left side, 
+    //it also copies those values (making note of x-flip) to the right vertices as well
+    tweenKey_Left_Hover.onUpdate(updateOtherSideVertices);
+    tweenKey_Left_PostSquash.onUpdate(updateOtherSideVertices);
+    tweenKey_Left_PreSquash.onUpdate(updateOtherSideVertices);
+    tweenKey_Left_Squash.onUpdate(updateOtherSideVertices);
+    
+    //setup the order of the keyframes by chaining the tweens in the following order:
+    //hover->fall->squash->jump->hover->repeat
+    tweenKey_Left_PostSquash.chain(tweenKey_Left_Hover);
+    tweenKey_Left_Hover.chain(tweenKey_Left_PreSquash);
+    tweenKey_Left_PreSquash.chain(tweenKey_Left_Squash);
+    tweenKey_Left_Squash.chain(tweenKey_Left_PostSquash);
+
+    //choose the hover to start with
+    tweenKey_Left_Hover.start();
+
+}
+
+
+
 //draw the capital letter "I" by first clearing the viewport and then drawing each array carrying a side of the "I" 
 function draw() { 
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);  
     mat4.identity(mvMatrix);
-    
-    //mat4.rotateX(mvMatrix, mvMatrix, degToRad(rotAngle));  
+ 
     drawHelper(vertexPositionBufferLeftSide, document.getElementById("doUseWireframe").checked);
     drawHelper(vertexPositionBufferRightSide, document.getElementById("doUseWireframe").checked);
 }
@@ -291,13 +346,13 @@ function drawHelper(buff, bDrawLines){
     }
 }
 
-//update the last time 
-function animate() {
-    var timeNow = new Date().getTime();
-    var elapsed = timeNow - lastTime;
-    lastTime = timeNow;    
-    //updateVerticesForBuffers();  
-}
+//update the last time, no longer used 
+//function animate() {
+//    var timeNow = new Date().getTime();
+//    var elapsed = timeNow - lastTime;
+//    lastTime = timeNow;    
+//    //updateVerticesForBuffers();  
+//}
 
 
 function startup() {
@@ -318,40 +373,11 @@ function startup() {
     tick();
 }
 
-function setupTweens(){
-    //make sure that every time the tween interpolates values for the left side, 
-    //it also copies those values (making note of x-flip) to the right vertices as well
-    tweenKey_Left_Hover.onUpdate(updateOtherSideVertices);
-    tweenKey_Left_PostSquash.onUpdate(updateOtherSideVertices);
-    tweenKey_Left_PreSquash.onUpdate(updateOtherSideVertices);
-    tweenKey_Left_Squash.onUpdate(updateOtherSideVertices);
-    
-    //setup the order of the keyframes by chaining the tweens in the following order:
-    //hover->fall->squash->jump->hover->repeat
-    tweenKey_Left_PostSquash.chain(tweenKey_Left_Hover);
-    tweenKey_Left_Hover.chain(tweenKey_Left_PreSquash);
-    tweenKey_Left_PreSquash.chain(tweenKey_Left_Squash);
-    tweenKey_Left_Squash.chain(tweenKey_Left_PostSquash);
-
-    //choose the hover to start with
-    tweenKey_Left_Hover.start();
-
-}
-
-//update the vertices for the right half of the letter "I" to match whats been changed/interpolated for the left side
-function updateOtherSideVertices(){
-    for(var i = 0; i < triangleVerticesLeftSide.length; i+=3) {
-        triangleVerticesRightSide[i] = -triangleVerticesLeftSide[i];
-        triangleVerticesRightSide[i+1] = triangleVerticesLeftSide[i+1];  
-    }   
-}
-
 //every tick update the tweens and draw things
 function tick() {
     framecount++
     requestAnimFrame(tick);
     draw();
-    //animate(); 
     TWEEN.update();
 }
 
